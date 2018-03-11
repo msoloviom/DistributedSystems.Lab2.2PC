@@ -1,0 +1,45 @@
+buildscript {
+	ext {
+		springBootVersion = '2.0.0.RELEASE'
+	}
+	repositories {
+		mavenCentral()
+	}
+	dependencies {
+		classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+	}
+}
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.spring.dependency-management'
+
+group = 'com.lab2'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = 1.8
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	compile group: 'org.projectlombok', name: 'lombok', version: '1.16.20'
+	compile group: 'org.postgresql', name: 'postgresql', version: '9.4-1200-jdbc41'
+	compile "org.slf4j:log4j-over-slf4j:1.7.13"
+	compile group: 'org.glassfish.main.transaction', name: 'transaction-internal-api', version: '5.0'
+	compile group: 'org.glassfish.main.transaction', name: 'javax.transaction', version: '3.1.2.2'
+	compile group: 'org.glassfish.main.transaction', name: 'jts', version: '5.0'
+
+	compile("org.springframework.boot:spring-boot-starter-web")
+	compile('org.springframework.boot:spring-boot-starter-actuator')
+	compile('org.springframework.boot:spring-boot-starter-jdbc')
+	compile('org.springframework.boot:spring-boot-starter-jta-atomikos')
+}
+
+configurations.all {
+	//exclude group: "org.slf4j", module: "slf4j-log4j12"
+	exclude group: "ch.qos.logback", module: "logback-classic"
+	//exclude group: "log4j", module: "log4j"
+    exclude group: "com.zaxxer"
+}
