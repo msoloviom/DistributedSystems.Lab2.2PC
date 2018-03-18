@@ -22,8 +22,8 @@ import static javax.transaction.xa.XAResource.XA_OK;
 @Component
 public class JtaTransactionManager {
 
-    public static final String INSERT_INTO_FLY_BOOKING = "Insert into fly_booking values (1, 'Nick', 'DGH 678', 'DSF', 'LDM', '05/05/2018')";
-    public static final String INSERT_INTO_HOTEL_BOOKING = "Insert into hotel_booking values (1, 'Nick', 'Hilton', '05/05/2018', '15/05/2018')";
+    public static final String INSERT_INTO_FLY_BOOKING = "Insert into fly_booking values (1, 'Nik', 'DGH 678', 'DSF', 'LDM', '05/05/2018')";
+    public static final String INSERT_INTO_HOTEL_BOOKING = "Insert into hotel_booking values (1, 'Nik', 'Hilton', '05/05/2018', '15/05/2018')";
 
     private static PGXADataSource dataSource1;
     private static PGXADataSource dataSource2;
