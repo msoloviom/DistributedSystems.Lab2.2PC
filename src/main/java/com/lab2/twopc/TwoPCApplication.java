@@ -43,6 +43,18 @@ public class TwoPCApplication {
 		return source;
 	}
 
+	@Bean(name = "dataSource3")
+	@ConfigurationProperties(prefix = "spring.datasource3")
+	public PGXADataSource thirdDataSource() {
+		PGXADataSource source = new PGXADataSource();
+		source.setServerName("localhost");
+		source.setDatabaseName("postgres3");
+		source.setUser("postgres");
+		source.setPassword("1");
+		source.setPortNumber(5433);
+		return source;
+	}
+
 	@Bean
 	public PlatformTransactionManager platformTransactionManager(){
 		JtaTransactionManager jtaTransactionManager = new JtaTransactionManager();

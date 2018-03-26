@@ -22,11 +22,13 @@ import static javax.transaction.xa.XAResource.XA_OK;
 @Component
 public class JtaTransactionManager {
 
-    public static final String INSERT_INTO_FLY_BOOKING = "Insert into fly_booking values (1, 'Nik', 'DGH 678', 'DSF', 'LDM', '05/05/2018')";
-    public static final String INSERT_INTO_HOTEL_BOOKING = "Insert into hotel_booking values (1, 'Nik', 'Hilton', '05/05/2018', '15/05/2018')";
+    public static final String INSERT_INTO_FLY_BOOKING = "Insert into fly_booking values (1, 'Nick', 'DGH 678', 'DSF', 'LDM', '05/05/2018')";
+    public static final String INSERT_INTO_HOTEL_BOOKING = "Insert into hotel_booking values (1, 'Nick', 'Hilton', '05/05/2018', '15/05/2018')";
+    public static final String UPDATE_ACCOUNT = "Update account set value=value-1 where id = 1";
 
     private static PGXADataSource dataSource1;
     private static PGXADataSource dataSource2;
+    private static PGXADataSource dataSource3;
 
     @Autowired
     private ApplicationContext appContext;
@@ -35,6 +37,7 @@ public class JtaTransactionManager {
     private void init() {
         dataSource1 = (PGXADataSource) appContext.getBean("dataSource");
         dataSource2 = (PGXADataSource) appContext.getBean("dataSource2");
+        dataSource3 = (PGXADataSource) appContext.getBean("dataSource3");
     }
 
     /**
@@ -77,29 +80,38 @@ public class JtaTransactionManager {
         byte[] bqual = new byte[]{0x00, 0x22, 0x00};
         int rc1;
         int rc2;
+        int rc3;
 
         try {
             XAConnection xaConn1 = dataSource1.getXAConnection();
             XAConnection xaConn2 = dataSource2.getXAConnection();
+            XAConnection xaConn3 = dataSource3.getXAConnection();
             XAResource xaRes1 = xaConn1.getXAResource();
             XAResource xaRes2 = xaConn2.getXAResource();
+            XAResource xaRes3 = xaConn3.getXAResource();
             Connection conn1 = xaConn1.getConnection();
             Connection conn2 = xaConn2.getConnection();
+            Connection conn3 = xaConn3.getConnection();
 
             Xid xid1 = new DB2Xid(1, gtrid, bqual);
             Xid xid2 = new DB2Xid(2, gtrid, bqual);
+            Xid xid3 = new DB2Xid(3, gtrid, bqual);
 
             xaRes1.start(xid1, TMNOFLAGS);
             xaRes2.start(xid2, TMNOFLAGS);
+            xaRes3.start(xid3, TMNOFLAGS);
 
             Statement stmt1 = conn1.createStatement();
             Statement stmt2 = conn2.createStatement();
+            Statement stmt3 = conn3.createStatement();
 
             stmt1.executeUpdate(firstQuery);
             stmt2.executeUpdate(secondQuery);
+            stmt3.executeUpdate(UPDATE_ACCOUNT);
 
             xaRes1.end(xid1, TMSUCCESS);
             xaRes2.end(xid2, TMSUCCESS);
+            xaRes3.end(xid3, TMSUCCESS);
 
             try {
                 // Now prepare both branches of the distributed transaction.
@@ -111,8 +123,12 @@ public class JtaTransactionManager {
                     // Prepare was successful. Prepare the second connection.
                     rc2 = xaRes2.prepare(xid2);
                     if (rc2 == XA_OK) {
-                        xaRes1.commit(xid1, false);
-                        xaRes2.commit(xid2, false);
+                        rc3 = xaRes3.prepare(xid3);
+                        if (rc3 == XA_OK) {
+                            xaRes1.commit(xid1, false);
+                            xaRes2.commit(xid2, false);
+                            xaRes3.commit(xid3, false);
+                        }
                     }
                 }
             } catch (XAException xae) {
@@ -135,6 +151,13 @@ public class JtaTransactionManager {
                     System.out.println("Distributed Transaction rollback xaRes2 failed");
                     System.out.println("XAException error code = " + xae2.errorCode);
                     System.out.println("XAException message = " + xae2.getMessage());
+                }try {
+                    xaRes2.rollback(xid3);
+
+                } catch (XAException xae3) {
+                    System.out.println("Distributed Transaction rollback xaRes3 failed");
+                    System.out.println("XAException error code = " + xae3.errorCode);
+                    System.out.println("XAException message = " + xae3.getMessage());
                 }
             }
             try {
@@ -149,6 +172,12 @@ public class JtaTransactionManager {
                 xaConn2.close();
             } catch (Exception e) {
                 System.out.println("Failed to close connection 2: " + e.toString());
+                e.printStackTrace();
+            }try {
+                conn3.close();
+                xaConn3.close();
+            } catch (Exception e) {
+                System.out.println("Failed to close connection 3: " + e.toString());
                 e.printStackTrace();
             }
         } catch (SQLException sqlex) {
